@@ -1,0 +1,6 @@
+# dsh-archive-center bundle patch.
+# Installed via: dsh plugin --profile <profile> add dsh-archive-center
+# One Host row; the browser half is auto-composed via the `dsh.client` entry.
+- insert:
+    - id: archive-center
+      name: 'dsh-archive-center'

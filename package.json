@@ -1,0 +1,30 @@
+{
+  "name": "dsh-archive-center",
+  "version": "0.1.0",
+  "description": "DSH archive session manager: browse / search / restore / hard-delete archived conversations from the Settings panel.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": { "default": "./src/index.js" },
+    "./client": { "default": "./lib/client.js" },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": {
+      "inject": ["@deepseek-ai/dsh-client-runtime"],
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "build": "tsdown && node -e \"require('fs').renameSync('lib/index.iife.js','lib/client.js')\"",
+    "watch": "tsdown --watch"
+  },
+  "devDependencies": {
+    "tsdown": "^0.22.14"
+  },
+  "engines": { "node": "^22.19.0 || >=24.0.0" },
+  "license": "MIT"
+}
