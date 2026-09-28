@@ -17,11 +17,10 @@ const React = typeof require !== 'undefined' ? require('react') : globalThis.Rea
 const I18N = {
   zh: {
     label: '归档会话',
+    sectionIntro: '集中管理已归档的会话：可搜索、预览对话内容，支持恢复并打开或彻底删除。',
     searchPlaceholder: '搜索名称 / 目录 / id / 正文…',
-    hint: '空输入列出全部归档；输入关键词会同时检索会话正文（FTS5，不可用时自动逐会话扫描）。',
     countAll: (n) => `共 ${n} 个归档会话`,
     countMatch: (n) => `匹配 ${n} 个归档会话`,
-    diagEmpty: '归档集当前为空：在侧边栏会话菜单里「归档」过的会话会出现在这里。',
     diagStale: (total, stale) => `有 ${total} 条归档记录，其中 ${stale} 条对应的会话日志已不存在（可能是之前清理数据留下的残留），已从列表中隐藏。`,
     cleanupStale: '清理失效记录',
     errorCleanup: (m) => `清理失败: ${m}`,
@@ -33,7 +32,6 @@ const I18N = {
     loading: '加载中…',
     searching: '搜索中…',
     searchingSuffix: ' · 搜索中…',
-    empty: '没有已归档的会话。',
     emptyMatch: '无匹配结果。',
     previewTitle: '点击展开最近对话预览',
     previewLoading: '加载预览中…',
@@ -48,14 +46,13 @@ const I18N = {
   },
   en: {
     label: 'Archived Sessions',
+    sectionIntro: 'Manage archived conversations in one place: search and preview them, restore & open, or hard-delete records.',
     searchPlaceholder: 'Search title / directory / id / content…',
-    hint: 'Empty input lists all archives; keywords also search conversation content (FTS5, per-session scan fallback).',
     countAll: (n) => `${n} archived session(s)`,
     countMatch: (n) => `${n} match(es)`,
     diagStale: (total, stale) => `${total} archive record(s), but ${stale} reference conversation logs that no longer exist (leftovers from an earlier data cleanup). They are hidden from the list.`,
     cleanupStale: 'Clean up stale records',
     errorCleanup: (m) => `Cleanup failed: ${m}`,
-    diagEmpty: 'The archive set is empty: sessions you "Archive" from the sidebar appear here.',
     confirmDelete: 'Hard-delete? The log directory is removed from disk. This cannot be undone.',
     cancel: 'Cancel',
     restoreOpen: 'Restore & open',
@@ -64,7 +61,6 @@ const I18N = {
     loading: 'Loading…',
     searching: 'Searching…',
     searchingSuffix: ' · searching…',
-    empty: 'No archived sessions.',
     emptyMatch: 'No matches.',
     previewTitle: 'Click to toggle a short conversation preview',
     previewLoading: 'Loading preview…',
@@ -271,7 +267,7 @@ export function apply(ctx) {
       ? React.createElement('div', { className: 'dsac-row-dim' }, t.loading)
       : rows.length === 0
         ? React.createElement('div', { className: 'dsac-row-dim' },
-            error ? null : (query.trim() ? t.emptyMatch : t.empty))
+            query.trim() ? t.emptyMatch : null)
         : grouped.map(([workspace, items]) => React.createElement('div', { key: workspace, className: 'dsac-group' },
             React.createElement('div', { className: 'dsac-group-header' },
               React.createElement('span', { className: 'dsac-group-name' }, workspace),
@@ -317,9 +313,8 @@ export function apply(ctx) {
 
     const diagText = (() => {
       if (loading || error || !diagnostics) return '';
-      if ((diagnostics.registryCount || 0) === 0) return t.diagEmpty;
       const readable = rows.length;
-      if (readable === 0 && (diagnostics.missingCount || 0) > 0) {
+      if (readable === 0 && (diagnostics.registryCount || 0) > 0 && (diagnostics.missingCount || 0) > 0) {
         return t.diagStale(diagnostics.registryCount, diagnostics.missingCount);
       }
       return '';
@@ -338,6 +333,9 @@ export function apply(ctx) {
 
     return React.createElement('div', { className: 'dsac-root' },
       React.createElement('style', null, CSS),
+      React.createElement('div', { className: 'dsac-header' },
+        React.createElement('div', { className: 'dsac-heading' }, t.label),
+        React.createElement('div', { className: 'dsac-intro' }, t.sectionIntro)),
       React.createElement('input', {
         className: 'dsac-search', type: 'text', placeholder: t.searchPlaceholder,
         value: query, onChange: (e) => setQuery(e.target.value),
@@ -355,6 +353,9 @@ export function apply(ctx) {
 
   const CSS = [
     '.dsac-root{display:flex;flex-direction:column;gap:8px;}',
+    '.dsac-header{display:flex;flex-direction:column;gap:4px;padding:2px 0 6px;border-bottom:1px solid var(--dsw-alias-border-l2);}',
+    '.dsac-heading{font-size:16px;font-weight:500;line-height:24px;color:var(--dsw-alias-label-primary);}',
+    '.dsac-intro{font-size:12px;line-height:20px;color:var(--dsw-alias-label-secondary);}',
     '.dsac-search{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:13px;outline:none;}',
     '.dsac-search:focus{border-color:var(--dsw-alias-brand-primary);}',
     '.dsac-hint{font-size:11px;color:var(--dsw-alias-label-secondary);opacity:.8;}',
@@ -384,8 +385,11 @@ export function apply(ctx) {
     '.dsac-btn:disabled{opacity:.5;cursor:default;}',
   ].join('');
 
+  // Section id must stay "archived-sessions": the host settings shell maps nav
+  // icons by id (archived-sessions -> archive icon; unknown ids fall back to
+  // the generic settings gear, which duplicates 通用设置).
   const makeRegistration = () => slots.register(
-    { name: 'settings.section', id: 'archive-center', order: 80, label: (I18N[localeId(ctx)] || I18N.zh).label },
+    { name: 'settings.section', id: 'archived-sessions', order: 80, label: (I18N[localeId(ctx)] || I18N.zh).label },
     (props) => React.createElement(ArchivedList, { close: props ? props.close : undefined }),
   );
   // Deferred registration: the factory runs only when the Settings page declares

@@ -1,6 +1,6 @@
 {
   "name": "dsh-archive-center",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH archive session manager: browse / search / restore / hard-delete archived conversations from the Settings panel.",
   "type": "module",
   "main": "src/index.js",
